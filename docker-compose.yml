@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # Main scraper service
+  scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-unknown}
+        VERSION: ${VERSION:-1.0.0}
+        VCS_REF: ${VCS_REF:-unknown}
+    container_name: theknot-scraper
+    hostname: scraper-01
+
+    # Volume mounts for persistence
+    volumes:
+      - ./output:/app/output
+      - ./logs:/app/logs
+      - ./cookies:/app/cookies
+      - ./.env:/app/.env:ro  # Read-only environment file
+
+    # Environment variables (can override .env)
+    environment:
+      - THEKNOT_HEADLESS=${HEADLESS:-true}
+      - THEKNOT_MIN_DELAY=${MIN_DELAY:-3.0}
+      - THEKNOT_MAX_DELAY=${MAX_DELAY:-6.0}
+      - THEKNOT_SAVE_SCREENSHOTS=${SAVE_SCREENSHOTS:-true}
+      - THEKNOT_LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+    # Network configuration
+    networks:
+      - scraper_network
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Override default command if needed
+    # command: python -m theknot_scraper.example_multiple_vendors
+
+  # Optional: Monitoring service (Prometheus)
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+  #   volumes:
+  #     - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+  #     - prometheus_data:/prometheus
+  #   ports:
+  #     - "9090:9090"
+  #   networks:
+  #     - scraper_network
+
+  # Optional: Grafana for dashboards
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: grafana
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - scraper_network
+
+networks:
+  scraper_network:
+    driver: bridge
+    name: theknot_scraper_network
+
+volumes:
+  prometheus_data:
+  grafana_data:
