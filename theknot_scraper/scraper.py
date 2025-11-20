@@ -7,7 +7,7 @@ mechanisms identified in the bot detection analysis.
 import time
 import sys
 from pathlib import Path
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Tuple
 from dataclasses import dataclass, asdict
 from loguru import logger
 
@@ -341,7 +341,7 @@ class TheKnotScraper:
                 return self.navigate_to_page(url, wait_time, retry + 1)
             return False
 
-    def get_page_html(self, url: str) -> tuple[bool, str, str]:
+    def get_page_html(self, url: str) -> Tuple[bool, str, str]:
         """
         Simply fetch a page and return its HTML
 

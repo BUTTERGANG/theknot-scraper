@@ -3,7 +3,7 @@ Configuration settings for TheKnot scraper
 """
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 from pydantic import BaseModel, Field
 
 class ScraperConfig(BaseModel):
@@ -11,7 +11,7 @@ class ScraperConfig(BaseModel):
 
     # Browser settings
     headless: bool = Field(default=False, description="Run browser in headless mode (not recommended for anti-detection)")
-    window_size: tuple[int, int] = Field(default=(1920, 1080), description="Browser window size")
+    window_size: Tuple[int, int] = Field(default=(1920, 1080), description="Browser window size")
 
     # Timing settings (in seconds)
     min_delay: float = Field(default=2.0, description="Minimum delay between actions")
@@ -22,7 +22,7 @@ class ScraperConfig(BaseModel):
     # Human behavior simulation
     enable_mouse_movement: bool = Field(default=True, description="Simulate mouse movements")
     enable_random_scrolling: bool = Field(default=True, description="Random scrolling behavior")
-    typing_delay_range: tuple[float, float] = Field(default=(0.1, 0.3), description="Delay range for typing")
+    typing_delay_range: Tuple[float, float] = Field(default=(0.1, 0.3), description="Delay range for typing")
 
     # Retry settings
     max_retries: int = Field(default=3, description="Maximum number of retries for failed requests")
