@@ -116,9 +116,10 @@ class TheKnotScraper:
             # Set preferences
             options.add_experimental_option("prefs", CHROME_PREFS)
 
-            # Exclude automation flags
-            options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
-            options.add_experimental_option("useAutomationExtension", False)
+            # Exclude automation flags (handled by undetected-chromedriver internally)
+            # Commenting out to fix compatibility issues with newer Chrome/Python versions
+            # options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
+            # options.add_experimental_option("useAutomationExtension", False)
 
             # Custom user agent (optional)
             if self.config.custom_user_agent:
