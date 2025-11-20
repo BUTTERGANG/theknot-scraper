@@ -11,8 +11,8 @@ from config import ScraperConfig
 def main():
     """Scrape a single vendor page"""
 
-    # Example vendor URL (replace with actual vendor URL)
-    vendor_url = "https://www.theknot.com/marketplace/vendor-name-city-state-123456"
+    # Real vendor URL for testing
+    vendor_url = "https://www.theknot.com/marketplace/original-weddings-photo-and-video-seattle-wa-1088212"
 
     # Configure scraper
     config = ScraperConfig(
