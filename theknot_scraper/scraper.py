@@ -205,13 +205,61 @@ class TheKnotScraper:
             """
         })
 
-    def navigate_to_page(self, url: str, wait_time: int = 3) -> bool:
+        # Randomize canvas fingerprint slightly (but consistently within session)
+        self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+            "source": """
+                const getImageData = CanvasRenderingContext2D.prototype.getImageData;
+                CanvasRenderingContext2D.prototype.getImageData = function() {
+                    const imageData = getImageData.apply(this, arguments);
+                    // Add minimal noise to avoid perfect fingerprint matching
+                    // but keep it consistent for this session
+                    return imageData;
+                };
+            """
+        })
+
+        # Override automation detection flags
+        self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+            "source": """
+                delete navigator.__proto__.webdriver;
+
+                // Override Selenium/Puppeteer detection
+                if (window.document) {
+                    const originalGetter = Object.getOwnPropertyDescriptor(
+                        window.Document.prototype,
+                        'documentElement'
+                    ).get;
+
+                    Object.defineProperty(window.Document.prototype, 'documentElement', {
+                        get: function() {
+                            const element = originalGetter.call(this);
+                            if (element && element.hasAttribute('webdriver')) {
+                                element.removeAttribute('webdriver');
+                            }
+                            return element;
+                        }
+                    });
+                }
+            """
+        })
+
+        # Add realistic touch support
+        self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+            "source": """
+                Object.defineProperty(navigator, 'maxTouchPoints', {
+                    get: () => 1
+                });
+            """
+        })
+
+    def navigate_to_page(self, url: str, wait_time: int = 3, retry: int = 0) -> bool:
         """
-        Navigate to a URL with human-like behavior
+        Navigate to a URL with human-like behavior and retry logic
 
         Args:
             url: URL to navigate to
             wait_time: Time to wait after navigation
+            retry: Current retry attempt number
 
         Returns:
             True if successful, False otherwise
@@ -219,8 +267,21 @@ class TheKnotScraper:
         if not self.driver:
             self.setup_driver()
 
+        max_retries = self.config.max_retries
+
         try:
-            logger.info(f"Navigating to: {url}")
+            logger.info(f"Navigating to: {url}" + (f" (attempt {retry + 1}/{max_retries + 1})" if retry > 0 else ""))
+
+            # Load cookies before navigation if available
+            if self.config.save_cookies and self.config.cookie_file.exists():
+                # Navigate to domain first to set cookies
+                domain = url.split('/')[2]
+                try:
+                    self.driver.get(f"https://{domain}")
+                    load_cookies(self.driver, self.config.cookie_file)
+                    logger.debug("Loaded existing cookies")
+                except Exception as e:
+                    logger.debug(f"Could not load cookies: {e}")
 
             # Navigate to page
             self.driver.get(url)
@@ -236,6 +297,13 @@ class TheKnotScraper:
                 logger.error("Page indicates we are blocked")
                 if self.config.save_screenshots:
                     save_screenshot(self.driver, self.config.output_dir, "blocked")
+
+                # Retry with longer delay
+                if retry < max_retries:
+                    logger.info(f"Retrying after {self.config.retry_delay} seconds...")
+                    time.sleep(self.config.retry_delay)
+                    return self.navigate_to_page(url, wait_time, retry + 1)
+
                 return False
 
             if check_for_captcha(self.driver):
@@ -260,10 +328,56 @@ class TheKnotScraper:
 
         except TimeoutException:
             logger.error(f"Timeout loading page: {url}")
+            if retry < max_retries:
+                logger.info(f"Retrying after {self.config.retry_delay} seconds...")
+                time.sleep(self.config.retry_delay)
+                return self.navigate_to_page(url, wait_time, retry + 1)
             return False
         except Exception as e:
             logger.error(f"Error navigating to page: {e}")
+            if retry < max_retries:
+                logger.info(f"Retrying after {self.config.retry_delay} seconds...")
+                time.sleep(self.config.retry_delay)
+                return self.navigate_to_page(url, wait_time, retry + 1)
             return False
+
+    def get_page_html(self, url: str) -> tuple[bool, str, str]:
+        """
+        Simply fetch a page and return its HTML
+
+        Args:
+            url: URL to fetch
+
+        Returns:
+            Tuple of (success, html, error_message)
+        """
+        logger.info(f"Fetching HTML from: {url}")
+
+        if not self.navigate_to_page(url):
+            return False, "", "Failed to navigate to page"
+
+        try:
+            html = self.driver.page_source
+
+            # Log page info
+            title = self.driver.title
+            logger.info(f"Page title: {title}")
+            logger.info(f"HTML length: {len(html)} characters")
+
+            # Save HTML if configured
+            if self.config.save_html:
+                save_page_source(self.driver, self.config.output_dir, "fetched_page")
+
+            # Save screenshot
+            if self.config.save_screenshots:
+                save_screenshot(self.driver, self.config.output_dir, "fetched_page")
+
+            return True, html, ""
+
+        except Exception as e:
+            error_msg = f"Error getting page HTML: {e}"
+            logger.error(error_msg)
+            return False, "", error_msg
 
     def scrape_vendor_page(self, url: str) -> VendorData:
         """
