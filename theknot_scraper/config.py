@@ -162,7 +162,33 @@ SELECTORS = {
         ".package-details",
         "[data-testid='package-description']",
         ".package-features",
-    ]
+    ],
+    # Marketplace/Search Results page selectors
+    "search_result_cards": [
+        "[class*='vendor-card']",
+        "[class*='VendorCard']",
+        "[data-testid='vendor-card']",
+        "[class*='search-result']",
+        ".vendor-card",
+        "article[class*='vendor']",
+        "div[class*='storefrontCard']",
+        "[data-component='StorefrontCard']",
+    ],
+    "vendor_card_link": [
+        "a[href*='/marketplace/'][href*='--']",  # Links to individual vendors have -- in URL
+        "[class*='vendor-card'] a[href*='/marketplace/']",
+        "[class*='VendorCard'] a[href*='/marketplace/']",
+        "a[data-testid='vendor-link']",
+        ".vendor-card-link",
+    ],
+    "vendor_card_name": [
+        "[class*='vendor-card'] h2",
+        "[class*='vendor-card'] h3",
+        "[class*='VendorCard'] h2",
+        "[class*='VendorCard'] h3",
+        ".vendor-card-title",
+        "[data-testid='vendor-name']",
+    ],
 }
 
 

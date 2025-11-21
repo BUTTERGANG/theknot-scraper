@@ -342,6 +342,161 @@ class TheKnotScraper:
                 return self.navigate_to_page(url, wait_time, retry + 1)
             return False
 
+    def detect_page_type(self) -> str:
+        """
+        Detect if current page is a marketplace listing or individual vendor page
+
+        Returns:
+            "marketplace" for search/listing pages
+            "vendor" for individual vendor pages
+            "unknown" if unable to determine
+        """
+        if not self.driver:
+            return "unknown"
+
+        try:
+            url = self.driver.current_url
+            logger.debug(f"Detecting page type for: {url}")
+
+            # Check URL pattern
+            if '/marketplace/' in url:
+                # Extract the part after /marketplace/
+                path_parts = url.split('/marketplace/')[-1].split('?')[0].split('/')
+
+                # Marketplace listing: /marketplace/category-location
+                # Vendor page: /marketplace/vendor-name-location--vendor-id
+                # Vendor pages typically have "--" followed by an ID
+                if '--' in path_parts[0]:
+                    logger.info("Detected vendor page (URL contains --)")
+                    return "vendor"
+                elif len(path_parts) == 1:
+                    logger.info("Detected marketplace listing page")
+                    return "marketplace"
+
+            # Fallback: Try to detect by page content
+            # Marketplace pages have multiple vendor cards
+            vendor_cards = safe_find_elements(self.driver, SELECTORS["search_result_cards"])
+            if vendor_cards and len(vendor_cards) > 1:
+                logger.info(f"Detected marketplace page ({len(vendor_cards)} vendor cards found)")
+                return "marketplace"
+
+            # Vendor pages have a single business name h1
+            vendor_name = safe_find_element(self.driver, SELECTORS["vendor_name"])
+            if vendor_name:
+                logger.info("Detected vendor page (has vendor name h1)")
+                return "vendor"
+
+            logger.warning("Unable to determine page type")
+            return "unknown"
+
+        except Exception as e:
+            logger.error(f"Error detecting page type: {e}")
+            return "unknown"
+
+    def scrape_marketplace_page(self, url: str, max_vendors: Optional[int] = None) -> List[str]:
+        """
+        Scrape marketplace/search page to extract vendor URLs
+
+        Args:
+            url: Marketplace listing URL
+            max_vendors: Maximum number of vendor URLs to extract (None = all)
+
+        Returns:
+            List of vendor page URLs
+        """
+        logger.info(f"Scraping marketplace page: {url}")
+
+        vendor_urls = []
+
+        # Navigate to page
+        if not self.navigate_to_page(url):
+            logger.error("Failed to navigate to marketplace page")
+            return vendor_urls
+
+        # Verify it's a marketplace page
+        page_type = self.detect_page_type()
+        if page_type != "marketplace":
+            logger.warning(f"Page type detected as '{page_type}', not 'marketplace'")
+            if page_type == "vendor":
+                logger.info("This appears to be a vendor page. Returning this URL.")
+                return [url]
+
+        try:
+            # Find all vendor cards
+            vendor_cards = safe_find_elements(self.driver, SELECTORS["search_result_cards"])
+
+            if not vendor_cards:
+                logger.warning("No vendor cards found on marketplace page")
+                if self.config.save_screenshots:
+                    save_screenshot(self.driver, self.config.output_dir, "marketplace_no_results")
+                if self.config.save_html:
+                    save_page_source(self.driver, self.config.output_dir, "marketplace_no_results")
+                return vendor_urls
+
+            logger.info(f"Found {len(vendor_cards)} vendor cards")
+
+            # Extract vendor URLs
+            for idx, card in enumerate(vendor_cards, 1):
+                if max_vendors and len(vendor_urls) >= max_vendors:
+                    break
+
+                try:
+                    # Try to find link within this card
+                    link_element = None
+
+                    # Try each selector
+                    for selector in SELECTORS["vendor_card_link"]:
+                        try:
+                            link_element = card.find_element(By.CSS_SELECTOR, selector)
+                            if link_element:
+                                break
+                        except Exception:
+                            continue
+
+                    if not link_element:
+                        # Try finding any link with /marketplace/ in href
+                        try:
+                            links = card.find_elements(By.CSS_SELECTOR, "a[href*='/marketplace/']")
+                            for link in links:
+                                href = link.get_attribute("href")
+                                if href and '--' in href:  # Vendor URLs have -- in them
+                                    link_element = link
+                                    break
+                        except Exception:
+                            pass
+
+                    if link_element:
+                        vendor_url = link_element.get_attribute("href")
+                        if vendor_url and vendor_url not in vendor_urls:
+                            # Validate it's a vendor URL
+                            if '/marketplace/' in vendor_url and '--' in vendor_url:
+                                vendor_urls.append(vendor_url)
+                                logger.debug(f"Found vendor URL {len(vendor_urls)}: {vendor_url}")
+                            else:
+                                logger.debug(f"Skipping non-vendor URL: {vendor_url}")
+                    else:
+                        logger.debug(f"No link found in vendor card {idx}")
+
+                except Exception as e:
+                    logger.debug(f"Error extracting URL from vendor card {idx}: {e}")
+
+            logger.info(f"Extracted {len(vendor_urls)} vendor URLs from marketplace page")
+
+            if not vendor_urls:
+                logger.warning("No vendor URLs extracted. Saving debug info...")
+                if self.config.save_screenshots:
+                    save_screenshot(self.driver, self.config.output_dir, "marketplace_no_urls")
+                if self.config.save_html:
+                    save_page_source(self.driver, self.config.output_dir, "marketplace_no_urls")
+
+            return vendor_urls
+
+        except Exception as e:
+            logger.error(f"Error scraping marketplace page: {e}")
+            if self.config.save_screenshots:
+                save_screenshot(self.driver, self.config.output_dir, "marketplace_error")
+            return vendor_urls
+
     def get_page_html(self, url: str) -> Tuple[bool, str, str]:
         """
         Simply fetch a page and return its HTML
