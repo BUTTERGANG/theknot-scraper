@@ -380,12 +380,14 @@ def check_for_block(driver: WebDriver) -> bool:
     block_indicators = [
         "403 forbidden",
         "access denied",
-        "blocked",
         "you have been blocked",
+        "your access has been blocked",
         "unusual traffic",
         "automated requests",
         "bot detected",
-        "captcha required"
+        "captcha required",
+        "please verify you are a human",
+        "enable javascript and cookies"
     ]
 
     page_text = driver.page_source.lower()
