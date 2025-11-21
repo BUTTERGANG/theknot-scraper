@@ -114,50 +114,54 @@ BROWSER_HEADERS = {
 # TheKnot specific selectors (CSS)
 SELECTORS = {
     "vendor_name": [
+        "h1.ods-c-text-hero-v1",
+        "[class*='text-hero--mp-']",
+        ".vendor-name-container--mp-4b058 h1",
+        "[class*='vendor-name-container'] h1",
         "h1.vendor-name",
         "h1[data-testid='vendor-name']",
-        "h1.storefrontHeader-title",
-        ".vendor-header h1",
-        "h1.heading-1"
     ],
     "starting_price": [
+        "[data-testid='meta-price-range']",
+        "[class*='price--mp-']",
+        ".price--mp-28150",
         "[data-testid='starting-price']",
         ".starting-price",
-        ".price-display",
-        "span.price-range",
-        ".vendor-price .price",
     ],
     "packages_section": [
+        "[class*='pricesAndPackages--mp-']",
+        ".pricesAndPackages--mp-f70fc",
         "[data-testid='packages-section']",
         ".packages-container",
-        ".pricing-packages",
         "#packages",
-        "section.packages",
-        ".package-details"
     ],
     "package_item": [
+        "[class*='package-wrapper--mp-']",
+        ".package-wrapper--mp-655e4",
+        "[class*='package-container--mp-']",
+        ".package-container--mp-143a9",
         ".package-card",
-        ".package-item",
         "[data-testid='package']",
-        ".pricing-tier"
     ],
     "package_name": [
+        "[class*='package-name--mp-']",
+        ".package-name--mp-902d9",
+        "[class*='package-heading--mp-']",
+        ".package-heading--mp-3fb73",
         ".package-name",
-        ".package-title",
-        "h3.package-heading",
-        "[data-testid='package-name']"
+        "[data-testid='package-name']",
     ],
     "package_price": [
+        "[class*='package-price--mp-']",
+        ".package-price--mp-646e1",
         ".package-price",
-        ".package-cost",
         "[data-testid='package-price']",
-        "span.price"
     ],
     "package_description": [
         ".package-description",
         ".package-details",
         "[data-testid='package-description']",
-        ".package-features"
+        ".package-features",
     ]
 }
 
@@ -165,13 +169,14 @@ SELECTORS = {
 # XPath alternatives for selectors
 XPATH_SELECTORS = {
     "vendor_name": [
+        "//h1[contains(@class, 'text-hero')]",
+        "//h1[contains(@class, 'ods-c-text-hero')]",
+        "//*[contains(@class, 'vendor-name-container')]//h1",
         "//h1[contains(@class, 'vendor-name')]",
-        "//h1[contains(@class, 'storefrontHeader-title')]",
-        "//h1[contains(@class, 'heading-1')]"
     ],
     "starting_price": [
+        "//*[@data-testid='meta-price-range']",
+        "//*[contains(@class, 'price--mp-')]",
         "//*[contains(@class, 'starting-price')]",
-        "//*[contains(text(), 'Starting at') or contains(text(), 'From $')]//following-sibling::*",
-        "//*[contains(@class, 'price-range')]"
     ]
 }
