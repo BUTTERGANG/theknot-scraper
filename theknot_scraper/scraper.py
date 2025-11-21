@@ -290,6 +290,15 @@ class TheKnotScraper:
             # Wait for page load
             wait_for_page_load(self.driver, self.config.page_load_timeout)
 
+            # Wait for main content container to ensure JS has rendered
+            try:
+                WebDriverWait(self.driver, 10).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, "[class*='vendor-name-container'], [id*='storefront']"))
+                )
+                logger.debug("Main content container loaded")
+            except TimeoutException:
+                logger.debug("Main content container not found, proceeding anyway")
+
             # Random delay
             random_delay(wait_time, wait_time + 2)
 

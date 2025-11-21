@@ -114,15 +114,18 @@ BROWSER_HEADERS = {
 # TheKnot specific selectors (CSS)
 SELECTORS = {
     "vendor_name": [
+        "[class*='vendor-name-container'] h1",
         "h1.ods-c-text-hero-v1",
         "[class*='text-hero--mp-']",
         ".vendor-name-container--mp-4b058 h1",
-        "[class*='vendor-name-container'] h1",
+        "h1[class*='ods-c-text-hero']",
         "h1.vendor-name",
         "h1[data-testid='vendor-name']",
     ],
     "starting_price": [
         "[data-testid='meta-price-range']",
+        "[class*='highlights-container'] [class*='text-category']",
+        ".highlights-text-container--mp-ee07a .ods-c-text-category-v1",
         "[class*='price--mp-']",
         ".price--mp-28150",
         "[data-testid='starting-price']",

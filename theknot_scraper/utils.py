@@ -137,7 +137,7 @@ def simulate_human_behavior(driver: WebDriver, config) -> None:
 
 
 def safe_find_element(driver: WebDriver, selectors: List[str], by: By = By.CSS_SELECTOR,
-                      timeout: int = 10) -> Optional:
+                      timeout: int = 20) -> Optional:
     """
     Try multiple selectors to find an element
 
@@ -169,7 +169,7 @@ def safe_find_element(driver: WebDriver, selectors: List[str], by: By = By.CSS_S
 
 
 def safe_find_elements(driver: WebDriver, selectors: List[str], by: By = By.CSS_SELECTOR,
-                       timeout: int = 10) -> List:
+                       timeout: int = 20) -> List:
     """
     Try multiple selectors to find elements
 
@@ -216,6 +216,14 @@ def extract_text(element) -> str:
         return ""
 
     try:
+        # Check if it's a meta tag with content attribute
+        tag_name = element.tag_name.lower()
+        if tag_name == "meta":
+            content = element.get_attribute("content")
+            if content:
+                return content.strip()
+
+        # Try standard text extraction
         text = element.text.strip()
         if text:
             return text
@@ -226,7 +234,15 @@ def extract_text(element) -> str:
             return text
 
         text = element.get_attribute("innerText").strip()
-        return text if text else ""
+        if text:
+            return text
+
+        # For other elements with content attribute
+        content = element.get_attribute("content")
+        if content:
+            return content.strip()
+
+        return ""
     except Exception as e:
         logger.debug(f"Error extracting text: {e}")
         return ""
