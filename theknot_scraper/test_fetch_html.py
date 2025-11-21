@@ -60,10 +60,10 @@ def analyze_html(html: str) -> dict:
 def test_homepage():
     """Test fetching TheKnot homepage"""
     print("\n" + "=" * 70)
-    print("TEST 1: Fetch TheKnot.com Homepage")
+    print("TEST 1: Fetch TheKnot.com Wedding Photographers Page")
     print("=" * 70)
 
-    url = "https://www.theknot.com"
+    url = "https://www.theknot.com/marketplace/wedding-photographers-fishers-in?sort=featured"
     print(f"Target URL: {url}")
     print()
 
