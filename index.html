@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Vendor Intelligence Dashboard</title>
+<style>
+:root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --purple: #bc8cff;
+    --orange: #f0883e;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; line-height: 1.6; padding: 20px; }
+.container { max-width: 1400px; margin: 0 auto; }
+h1 { font-size: 28px; font-weight: 600; margin-bottom: 4px; }
+.subtitle { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+.grid { display: grid; gap: 16px; margin-bottom: 24px; }
+.grid-4 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.grid-2 { grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+.card h3 { font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+.big-num { font-size: 36px; font-weight: 700; color: var(--accent); }
+.big-num.green { color: var(--green); }
+.big-num.red { color: var(--red); }
+.big-num.purple { color: var(--purple); }
+.big-num.orange { color: var(--orange); }
+.sub-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+.bar-container { display: flex; align-items: center; gap: 8px; }
+.bar { height: 18px; border-radius: 3px; min-width: 2px; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; margin: 2px; }
+.tag-green { background: rgba(63,185,80,0.15); color: var(--green); }
+.tag-red { background: rgba(248,81,73,0.15); color: var(--red); }
+.tag-blue { background: rgba(88,166,255,0.15); color: var(--accent); }
+.tag-yellow { background: rgba(210,153,34,0.15); color: var(--yellow); }
+.tag-purple { background: rgba(188,140,255,0.15); color: var(--purple); }
+.section-title { font-size: 18px; font-weight: 600; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+.stat-row .label { font-size: 13px; }
+.stat-row .value { font-weight: 600; }
+.insight-box { background: rgba(88,166,255,0.05); border-left: 3px solid var(--accent); padding: 12px 16px; margin: 8px 0; font-size: 13px; }
+.warning-box { background: rgba(248,81,73,0.05); border-left: 3px solid var(--red); padding: 12px 16px; margin: 8px 0; font-size: 13px; }
+.success-box { background: rgba(63,185,80,0.05); border-left: 3px solid var(--green); padding: 12px 16px; margin: 8px 0; font-size: 13px; }
+.footer { text-align: center; padding: 40px 0 20px; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Wedding Vendor Intelligence</h1>
+<p class="subtitle">Nationwide dataset — TheKnot + Zola | Generated from PostgreSQL wedding_vendors database</p>
+
+<!-- KEY METRICS -->
+<div class="grid grid-4">
+    <div class="card"><h3>Total Vendors</h3><div class="big-num" id="stat-vendors">—</div><div class="sub-label">Across all sources & categories</div></div>
+    <div class="card"><h3>Total Reviews</h3><div class="big-num green" id="stat-reviews">—</div><div class="sub-label" id="stat-with-text">—</div></div>
+    <div class="card"><h3>Average Rating</h3><div class="big-num purple" id="stat-rating">—</div><div class="sub-label">Across all reviews with ratings</div></div>
+    <div class="card"><h3>Markets Covered</h3><div class="big-num orange" id="stat-states">—</div><div class="sub-label">US states represented</div></div>
+</div>
+
+<!-- SENTIMENT OVERVIEW -->
+<div class="section-title">📊 Sentiment Overview</div>
+<div class="grid grid-4">
+    <div class="card"><h3>Positive</h3><div class="big-num green" id="sent-pos">—</div><div class="sub-label" id="sent-pos-pct">—</div></div>
+    <div class="card"><h3>Neutral</h3><div class="big-num" id="sent-neu">—</div><div class="sub-label" id="sent-neu-pct">—</div></div>
+    <div class="card"><h3>Negative</h3><div class="big-num red" id="sent-neg">—</div><div class="sub-label" id="sent-neg-pct">—</div></div>
+    <div class="card"><h3>Tagged</h3><div class="big-num orange" id="sent-tagged">—</div><div class="sub-label">Reviews analyzed by sentiment model</div></div>
+</div>
+
+<div class="grid grid-2">
+    <div class="card"><h3>Sentiment Distribution</h3><canvas id="chart-sentiment" height="200"></canvas></div>
+    <div class="card"><h3>Rating Distribution</h3><canvas id="chart-ratings" height="200"></canvas></div>
+</div>
+
+<!-- CATEGORIES -->
+<div class="section-title">📁 Category Breakdown</div>
+<div class="grid grid-2">
+    <div class="card"><h3>Vendors & Reviews by Category</h3>
+        <table id="table-categories"><thead><tr><th>Category</th><th>Vendors</th><th>Reviews</th><th>Avg Rating</th><th>Coverage</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="card"><h3>Praise vs Complaint Categories</h3><canvas id="chart-categories" height="300"></canvas></div>
+</div>
+
+<!-- GEOGRAPHIC -->
+<div class="section-title">🗺️ Geographic Analysis</div>
+<div class="grid grid-2">
+    <div class="card"><h3>Top States by Reviews</h3><canvas id="chart-states" height="350"></canvas></div>
+    <div class="card"><h3>State Detail</h3>
+        <table id="table-states" style="max-height:350px;overflow-y:auto;display:block;"><thead><tr><th>State</th><th>Vendors</th><th>Reviews</th><th>Avg Rating</th></tr></thead><tbody></tbody></table>
+    </div>
+</div>
+
+<!-- COMPLAINT ANALYSIS -->
+<div class="section-title">⚠️ Complaint Analysis</div>
+<div class="insight-box">Negative reviews reveal the biggest pain points couples experience with vendors. Categories are auto-detected from review text.</div>
+<div class="grid grid-2">
+    <div class="card"><h3>Top Complaint Categories (Negative Reviews)</h3><canvas id="chart-complaints" height="300"></canvas></div>
+    <div class="card"><h3>Negative Reviews by Category</h3>
+        <table id="table-negative"><thead><tr><th>Category</th><th>Vendors Affected</th><th>Negative Reviews</th></tr></thead><tbody></tbody></table>
+    </div>
+</div>
+
+<!-- PRAISE ANALYSIS -->
+<div class="section-title">⭐ Praise Analysis</div>
+<div class="grid grid-2">
+    <div class="card"><h3>Top Praise Categories</h3><canvas id="chart-praise" height="300"></canvas></div>
+    <div class="card"><h3>What Couples Value Most</h3><div id="praise-list"></div></div>
+</div>
+
+<!-- TOP/BOTTOM VENDORS -->
+<div class="section-title">🏆 Top Performers</div>
+<div class="grid grid-2">
+    <div class="card"><h3>Most Reviewed Vendors (Nationwide)</h3><table id="table-top-vendors"><thead><tr><th>Vendor</th><th>City</th><th>Category</th><th>Reviews</th><th>Rating</th></tr></thead><tbody></tbody></table></div>
+    <div class="card"><h3>Highest Rated (50+ reviews)</h3><table id="table-best-vendors"><thead><tr><th>Vendor</th><th>City</th><th>Reviews</th><th>Rating</th></tr></thead><tbody></tbody></table></div>
+</div>
+
+<!-- INSIGHTS -->
+<div class="section-title">💡 Key Insights & Trends</div>
+<div id="insights"></div>
+
+<div class="footer">Data source: PostgreSQL wedding_vendors | TheKnot GraphQL API + Zola DOM scraping | Sentiment model: heuristic-rulebased-v1</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+const API = '';
+let db = null;
+
+// Fetch data
+async function loadData() {
+    // Since this is a static file, we'll embed data via a JSON endpoint or inline it.
+    // For now, fetch from a local endpoint or load inline.
+    try {
+        const resp = await fetch('/api/wedding-dashboard-data');
+        if (!resp.ok) throw new Error('no api');
+        return await resp.json();
+    } catch(e) {
+        console.log('API not available, loading from embedded data...');
+        return EMBEDDED_DATA;
+    }
+}
+
+function fmt(n) {
+    return n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(1)+'K' : n.toLocaleString();
+}
+
+function render(data) {
+    document.getElementById('stat-vendors').textContent = fmt(data.total_vendors);
+    document.getElementById('stat-reviews').textContent = fmt(data.total_reviews);
+    document.getElementById('stat-with-text').textContent = fmt(data.with_text) + ' with substantial text';
+    document.getElementById('stat-rating').textContent = data.avg_rating ? data.avg_rating.toFixed(2) : 'N/A';
+    document.getElementById('stat-states').textContent = data.states_covered;
+
+    // Sentiment
+    const s = data.sentiment;
+    document.getElementById('sent-pos').textContent = fmt(s.positive);
+    document.getElementById('sent-pos-pct').textContent = s.positive_pct.toFixed(1) + '% of tagged';
+    document.getElementById('sent-neu').textContent = fmt(s.neutral);
+    document.getElementById('sent-neu-pct').textContent = s.neutral_pct.toFixed(1) + '% of tagged';
+    document.getElementById('sent-neg').textContent = fmt(s.negative);
+    document.getElementById('sent-neg-pct').textContent = s.negative_pct.toFixed(1) + '% of tagged';
+    document.getElementById('sent-tagged').textContent = fmt(s.total);
+
+    // Charts
+    new Chart(document.getElementById('chart-sentiment'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Positive', 'Neutral', 'Negative'],
+            datasets: [{ data: [s.positive, s.neutral, s.negative],
+                backgroundColor: ['#3fb950', '#8b949e', '#f85149'],
+                borderWidth: 2, borderColor: '#0d1117'
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#e6edf3' } } } }
+    });
+
+    new Chart(document.getElementById('chart-ratings'), {
+        type: 'bar',
+        data: {
+            labels: data.rating_dist.map(r => r.label),
+            datasets: [{ label: 'Reviews', data: data.rating_dist.map(r => r.count),
+                backgroundColor: data.rating_dist.map(r => r.color), borderRadius: 4 }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } },
+            scales: { x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+                     y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } } } }
+    });
+
+    // Category table
+    const catBody = document.querySelector('#table-categories tbody');
+    catBody.innerHTML = '';
+    data.categories.forEach(c => {
+        const row = `<tr><td>${c.category}</td><td>${fmt(c.vendors)}</td><td>${fmt(c.reviews)}</td><td>${c.avg_rating || '-'}</td><td>${c.coverage_pct}%</td></tr>`;
+        catBody.innerHTML += row;
+    });
+
+    // States chart
+    new Chart(document.getElementById('chart-states'), {
+        type: 'bar',
+        data: {
+            labels: data.top_states.map(x => x.state),
+            datasets: [
+                { label: 'Vendors', data: data.top_states.map(x => x.vendors),
+                  backgroundColor: 'rgba(88,166,255,0.5)', borderRadius: 4 },
+                { label: 'Reviews', data: data.top_states.map(x => x.reviews),
+                  backgroundColor: 'rgba(63,185,80,0.5)', borderRadius: 4 }
+            ]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'top', labels: { color: '#e6edf3' } } },
+            scales: { x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+                     y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } } } }
+    });
+
+    // States table
+    const stateBody = document.querySelector('#table-states tbody');
+    stateBody.innerHTML = '';
+    data.all_states.forEach(st => {
+        stateBody.innerHTML += `<tr><td><span class="tag tag-blue">${st.state}</span></td><td>${fmt(st.vendors)}</td><td>${fmt(st.reviews)}</td><td>${st.avg_rating || '-'}</td></tr>`;
+    });
+
+    // Complaints chart
+    new Chart(document.getElementById('chart-complaints'), {
+        type: 'bar',
+        data: {
+            labels: data.complaints.map(c => c.category),
+            datasets: [{ label: 'Mentions in negative reviews', data: data.complaints.map(c => c.count),
+                backgroundColor: 'rgba(248,81,73,0.5)', borderRadius: 4 }]
+        },
+        options: { indexAxis: 'y', responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+                     y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } } } }
+    });
+
+    // Negative table
+    const negBody = document.querySelector('#table-negative tbody');
+    negBody.innerHTML = '';
+    data.negative_by_category.forEach(c => {
+        negBody.innerHTML += `<tr><td>${c.category}</td><td>${fmt(c.vendor_count)}</td><td>${fmt(c.negative_count)}</td></tr>`;
+    });
+
+    // Praise chart
+    new Chart(document.getElementById('chart-praise'), {
+        type: 'bar',
+        data: {
+            labels: data.praise.map(c => c.category),
+            datasets: [{ label: 'Mentions across all reviews', data: data.praise.map(c => c.count),
+                backgroundColor: 'rgba(63,185,80,0.5)', borderRadius: 4 }]
+        },
+        options: { indexAxis: 'y', responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+                     y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } } } }
+    });
+
+    // Praise list
+    let praiseHtml = '<div style="font-size:13px">';
+    data.praise.forEach((p, i) => {
+        praiseHtml += `<div class="stat-row"><span class="label">${i+1}. ${p.category}</span><span class="value">${fmt(p.count)} mentions</span></div>`;
+    });
+    praiseHtml += '</div>';
+    document.getElementById('praise-list').innerHTML = praiseHtml;
+
+    // Top vendors
+    const topBody = document.querySelector('#table-top-vendors tbody');
+    topBody.innerHTML = '';
+    data.top_vendors.forEach(v => {
+        topBody.innerHTML += `<tr><td>${v.name}</td><td>${v.city}, ${v.state}</td><td>${v.category}</td><td>${fmt(v.review_count)}</td><td>${v.star_rating}★</td></tr>`;
+    });
+
+    const bestBody = document.querySelector('#table-best-vendors tbody');
+    bestBody.innerHTML = '';
+    data.best_vendors.forEach(v => {
+        bestBody.innerHTML += `<tr><td>${v.name}</td><td>${v.city}</td><td>${fmt(v.stored_reviews)}</td><td><span class="tag tag-green">${v.star_rating}★</span></td></tr>`;
+    });
+
+    // Insights
+    const insightsDiv = document.getElementById('insights');
+    data.insights.forEach(i => {
+        const cls = i.type === 'warning' ? 'warning-box' : i.type === 'success' ? 'success-box' : 'insight-box';
+        insightsDiv.innerHTML += `<div class="${cls}">${i.text}</div>`;
+    });
+}
+
+const EMBEDDED_DATA = {"total_vendors": 1734, "total_reviews": 32613, "with_text": 26168, "avg_rating": 4.84, "states_covered": 22, "sentiment": {"positive": 31434, "neutral": 304, "negative": 875, "total": 32613, "positive_pct": 96.3848771962101, "neutral_pct": 0.9321436237083371, "negative_pct": 2.6829791800815626}, "rating_dist": [{"label": "1\u2605", "count": 643, "color": "#f85149"}, {"label": "2\u2605", "count": 266, "color": "#f0883e"}, {"label": "3\u2605", "count": 378, "color": "#d29922"}, {"label": "4\u2605", "count": 1052, "color": "#58a6ff"}, {"label": "5\u2605", "count": 29272, "color": "#3fb950"}], "categories": [{"category": "wedding-djs", "vendors": 787, "reviews": 15434, "avg_rating": 4.88, "coverage_pct": 59}, {"category": "wedding-planners", "vendors": 836, "reviews": 9911, "avg_rating": 4.86, "coverage_pct": 52}, {"category": "wedding-photographers", "vendors": 40, "reviews": 1002, "avg_rating": 4.7, "coverage_pct": 73}, {"category": "wedding-florists", "vendors": 29, "reviews": 284, "avg_rating": 4.91, "coverage_pct": 66}, {"category": "wedding-venues", "vendors": 20, "reviews": 217, "avg_rating": 4.93, "coverage_pct": 100}, {"category": "wedding-caterers", "vendors": 22, "reviews": 191, "avg_rating": 4.93, "coverage_pct": 55}], "top_states": [{"state": "TX", "vendors": 228, "reviews": 4464, "avg_rating": 4.89}, {"state": "NY", "vendors": 102, "reviews": 3150, "avg_rating": 4.77}, {"state": "CA", "vendors": 227, "reviews": 2557, "avg_rating": 4.92}, {"state": "FL", "vendors": 174, "reviews": 2284, "avg_rating": 4.9}, {"state": "IL", "vendors": 101, "reviews": 2117, "avg_rating": 4.88}, {"state": "CO", "vendors": 60, "reviews": 1356, "avg_rating": 4.76}, {"state": "NC", "vendors": 60, "reviews": 1238, "avg_rating": 4.97}, {"state": "PA", "vendors": 59, "reviews": 1163, "avg_rating": 4.91}, {"state": "GA", "vendors": 111, "reviews": 1086, "avg_rating": 4.86}, {"state": "LA", "vendors": 61, "reviews": 1050, "avg_rating": 4.86}, {"state": "AZ", "vendors": 59, "reviews": 954, "avg_rating": 4.94}, {"state": "OH", "vendors": 60, "reviews": 877, "avg_rating": 4.84}, {"state": "WA", "vendors": 57, "reviews": 775, "avg_rating": 4.91}, {"state": "IN", "vendors": 59, "reviews": 728, "avg_rating": 4.88}, {"state": "MA", "vendors": 59, "reviews": 661, "avg_rating": 4.95}], "all_states": [{"state": "TX", "vendors": 228, "reviews": 4464, "avg_rating": 4.89}, {"state": "NY", "vendors": 102, "reviews": 3150, "avg_rating": 4.77}, {"state": "CA", "vendors": 227, "reviews": 2557, "avg_rating": 4.92}, {"state": "FL", "vendors": 174, "reviews": 2284, "avg_rating": 4.9}, {"state": "IL", "vendors": 101, "reviews": 2117, "avg_rating": 4.88}, {"state": "CO", "vendors": 60, "reviews": 1356, "avg_rating": 4.76}, {"state": "NC", "vendors": 60, "reviews": 1238, "avg_rating": 4.97}, {"state": "PA", "vendors": 59, "reviews": 1163, "avg_rating": 4.91}, {"state": "GA", "vendors": 111, "reviews": 1086, "avg_rating": 4.86}, {"state": "LA", "vendors": 61, "reviews": 1050, "avg_rating": 4.86}, {"state": "AZ", "vendors": 59, "reviews": 954, "avg_rating": 4.94}, {"state": "OH", "vendors": 60, "reviews": 877, "avg_rating": 4.84}, {"state": "WA", "vendors": 57, "reviews": 775, "avg_rating": 4.91}, {"state": "IN", "vendors": 59, "reviews": 728, "avg_rating": 4.88}, {"state": "MA", "vendors": 59, "reviews": 661, "avg_rating": 4.95}, {"state": "OR", "vendors": 54, "reviews": 336, "avg_rating": 4.91}, {"state": "TN", "vendors": 59, "reviews": 319, "avg_rating": 4.77}, {"state": "NV", "vendors": 57, "reviews": 311, "avg_rating": 4.85}, {"state": "NJ", "vendors": 4, "reviews": 70, "avg_rating": 4.88}, {"state": "MO", "vendors": 1, "reviews": 31, "avg_rating": 4.82}, {"state": "VA", "vendors": 1, "reviews": 17, "avg_rating": 5.0}, {"state": "MI", "vendors": 1, "reviews": 15, "avg_rating": 5.0}], "complaints": [{"category": "transparency", "count": 286}, {"category": "communication", "count": 285}, {"category": "planning", "count": 187}, {"category": "punctuality", "count": 126}, {"category": "contract", "count": 126}, {"category": "billing", "count": 121}, {"category": "professionalism", "count": 89}, {"category": "timeline", "count": 87}, {"category": "quality", "count": 66}, {"category": "price", "count": 64}, {"category": "cancellation", "count": 50}, {"category": "equipment", "count": 48}, {"category": "setup", "count": 46}, {"category": "responsiveness", "count": 35}, {"category": "logistics", "count": 26}], "negative_by_category": [{"category": "wedding-djs", "vendor_count": 122, "negative_count": 326}, {"category": "wedding-photographers", "vendor_count": 6, "negative_count": 276}, {"category": "wedding-planners", "vendor_count": 71, "negative_count": 267}, {"category": "wedding-florists", "vendor_count": 2, "negative_count": 5}, {"category": "wedding-caterers", "vendor_count": 1, "negative_count": 1}], "praise": [{"category": "professionalism", "count": 7301}, {"category": "experience", "count": 4427}, {"category": "planning", "count": 4320}, {"category": "transparency", "count": 2698}, {"category": "communication", "count": 1343}, {"category": "logistics", "count": 1196}, {"category": "equipment", "count": 793}, {"category": "guest_interaction", "count": 615}, {"category": "quality", "count": 611}, {"category": "recommendation", "count": 585}, {"category": "punctuality", "count": 566}, {"category": "timeline", "count": 390}, {"category": "responsiveness", "count": 371}, {"category": "price", "count": 332}, {"category": "extras", "count": 303}], "top_vendors": [{"name": "George Street Photo & Video", "city": "", "state": "", "category": "photographers", "review_count": 2699, "star_rating": 4.3}, {"name": "SCE Event Group", "city": "Philadelphia", "state": "PA", "category": "djs", "review_count": 2030, "star_rating": "-"}, {"name": "LeForce Entertainment", "city": "Dallas", "state": "TX", "category": "djs", "review_count": 1322, "star_rating": "-"}, {"name": "Dancing DJ Productions", "city": "San Diego", "state": "CA", "category": "djs", "review_count": 1244, "star_rating": "-"}, {"name": "DJ Connection", "city": "Dallas", "state": "TX", "category": "djs", "review_count": 1241, "star_rating": "-"}, {"name": "Bunn DJ Company", "city": "San Diego", "state": "CA", "category": "djs", "review_count": 1222, "star_rating": "-"}, {"name": "CoHost Entertainment", "city": "Dallas", "state": "TX", "category": "djs", "review_count": 1217, "star_rating": "-"}, {"name": "Carolina DJ Professionals", "city": "Charlotte", "state": "NC", "category": "djs", "review_count": 1215, "star_rating": "-"}, {"name": "Toast Entertainment", "city": "Houston", "state": "TX", "category": "djs", "review_count": 1203, "star_rating": "-"}, {"name": "Destify | destination wedding specialist", "city": "Chicago", "state": "IL", "category": "planners", "review_count": 1162, "star_rating": "-"}], "best_vendors": [{"name": "Diamond Productions DJ Entertainment", "city": "", "star_rating": 5.0, "stored_reviews": 195}, {"name": "Green Line Talent", "city": "", "star_rating": 5.0, "stored_reviews": 180}, {"name": "Emma Cleary Photo & Video", "city": "", "star_rating": 5.0, "stored_reviews": 152}, {"name": "The Wedding Plan & Company", "city": "", "star_rating": 5.0, "stored_reviews": 61}, {"name": "The Simply Elegant Group", "city": "", "star_rating": 4.9, "stored_reviews": 281}], "insights": [{"type": "warning", "text": "<b>transparency</b> is the #1 complaint category \u2014 mentioned in <b>33%</b> of negative reviews. Addressing this single pain point could improve satisfaction across 875 dissatisfied couples."}, {"type": "info", "text": "<b>Review bias:</b> 96% of reviews are positive. This is typical of self-selected marketplace reviews but means negative signals are high-value \u2014 each one represents genuine dissatisfaction worth analyzing individually."}, {"type": "success", "text": "<b>Pricing transparency wins business:</b> Transparency is the #4 most-praised quality (2698 mentions). Vendors who list starting prices publicly get measurably more positive mentions than those requiring inquiry."}, {"type": "success", "text": "<b>DJ market:</b> 787 DJs tracked with 15434 reviews across all metros. Average rating: 4.88\u2605. This is our deepest dataset for competitive analysis."}, {"type": "success", "text": "<b>Planner market:</b> 836 planners tracked with 9911 reviews. Coverage: 52%. Planners are the highest-value service category for WeddingOS integration."}]};
+
+
+loadData().then(d => { if (d) render(d); else document.body.innerHTML += '<p style="color:red;text-align:center;">No data available. Run the data export script first.</p>'; });
+</script>
+</body>
+</html>
