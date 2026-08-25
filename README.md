@@ -1,452 +1,205 @@
-# TheKnot Scraper - Production-Ready Web Scraping Suite
+# TheKnot Wedding Vendor Intelligence Scraper
 
-Advanced web scraper for TheKnot.com with sophisticated bot detection bypass, comprehensive testing, and production deployment support.
+Nationwide wedding vendor data pipeline: scrapes vendor listings + full review text from TheKnot, Zola, and WeddingWire into PostgreSQL for competitive intelligence and market analysis.
 
-## 🎯 Project Overview
+## Dataset Summary
 
-This project provides a complete web scraping solution for extracting vendor information from TheKnot.com while bypassing multi-layered bot detection mechanisms.
+| Metric | Count |
+|--------|-------|
+| Vendors tracked | 1,734 |
+| Reviews collected | 32,613 |
+| Metros covered | 28 US cities |
+| Categories | DJs (787), Planners (836), Photographers, Venues, Florists, Caterers |
+| States | 22 |
 
-### What's Included
-
-- **Bot Detection Analysis** - Comprehensive analysis of TheKnot's security measures
-- **Advanced Scraper** - Production-ready scraper with anti-detection
-- **Testing Suite** - Unit tests, integration tests, and validation tools
-- **Docker Support** - Containerized deployment
-- **Documentation** - Extensive guides and references
-
-## 📁 Project Structure
+## Architecture
 
 ```
-.
-├── theknot_scraper/              # Main package
-│   ├── scraper.py                # Core scraper implementation
-│   ├── config.py                 # Configuration management
-│   ├── utils.py                  # Utility functions
-│   ├── test_fetch_html.py        # Integration test script
-│   ├── validate_setup.py         # Setup validator
-│   ├── example_single_vendor.py  # Single vendor example
-│   ├── example_multiple_vendors.py  # Batch scraping example
-│   └── README.md                 # Package documentation
-│
-├── tests/                        # Unit test suite
-│   ├── test_config.py            # Configuration tests
-│   ├── test_utils.py             # Utility function tests
-│   └── conftest.py               # Pytest fixtures
-│
-├── Documentation/
-│   ├── theknot-bot-detection-report.md  # Security analysis
-│   ├── SCRAPER_DESIGN.md                # Architecture docs
-│   ├── IMPLEMENTATION_NOTES.md          # Implementation guide
-│   ├── SYSTEMATIC_IMPROVEMENTS.md       # Improvement analysis
-│   └── ENHANCEMENTS_SUMMARY.md          # Enhancement summary
-│
-├── pyproject.toml                # Python package configuration
-├── Dockerfile                    # Docker image definition
-├── docker-compose.yml            # Docker Compose configuration
-├── Makefile                      # Common commands
-├── .pre-commit-config.yaml       # Code quality hooks
-└── README.md                     # This file
+┌─────────────────────────────────────────────────────────┐
+│                    DATA SOURCES                          │
+├──────────────┬──────────────┬───────────────────────────┤
+│   TheKnot    │    Zola      │      WeddingWire           │
+│  GraphQL API │ __NEXT_DATA__│  JSON-LD / DOM              │
+└──────┬───────┴──────┬───────┴──────────┬────────────────┘
+       │              │                   │
+       ▼              ▼                   ▼
+┌─────────────────────────────────────────────────────────┐
+│                 PLAYWRIGHT SCRAPERS                      │
+│  Visible browser via Xvfb (:99) — anti-detection        │
+└──────────────────────┬──────────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────────┐
+│              POSTGRESQL (localhost:54329)                │
+│  vendors (1,734) │ vendor_reviews (32,613) │ scrape_runs│
+└──────────────────────┬──────────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────────┐
+│            SENTIMENT TAGGER + DASHBOARD                  │
+│  Rule-based v1: 96% positive, 3% negative               │
+│  29 complaint/praise categories auto-detected            │
+└─────────────────────────────────────────────────────────┘
 ```
 
-## 🚀 Quick Start
+## Key Files
 
-### Option 1: Traditional Installation
+### Production Scrapers
+
+| File | Source | Method | Status |
+|------|--------|--------|--------|
+| `theknot_scraper_v2.py` | TheKnot | `__INITIAL_STATE__` Redux extraction | ✅ Working |
+| `zola_scraper.py` | Zola | `__NEXT_DATA__` Next.js SSR extraction | ✅ Working |
+| `weddingwire_scraper.py` | WeddingWire | JSON-LD `application/ld+json` parsing | ✅ Working |
+| `scrape_tk_reviews.py` | TheKnot | GraphQL API (cracked) | ✅ Working |
+| `scrape_zola_reviews.py` | Zola | Scroll-triggered DOM extraction | ✅ Working |
+| `sentiment_tagger_bulk.py` | DB | Rule-based keyword + rating classification | ✅ Working |
+| `nationwide_tk_v3.py` | TheKnot | Nationwide multi-metro pipeline | ✅ Working |
+| `db_writer.py` | All | Unified upsert to PostgreSQL | ✅ Working |
+
+### Database Schema
+
+```sql
+-- vendors: 1,734 rows
+CREATE TABLE vendors (
+    id SERIAL PRIMARY KEY,
+    source TEXT NOT NULL,           -- 'theknot', 'zola', 'weddingwire'
+    source_vendor_id TEXT NOT NULL, -- unique ID per source
+    name TEXT NOT NULL,
+    category TEXT,                  -- 'wedding-djs', 'wedding-planners', etc.
+    city TEXT, state TEXT,
+    phone TEXT, email TEXT, website_url TEXT,
+    starting_price_min NUMERIC(10,2),
+    star_rating NUMERIC(3,1),
+    review_count INT,
+    description TEXT,
+    ad_tier TEXT, vendor_tier TEXT,
+    facebook_url TEXT, instagram_username TEXT,
+    awards JSONB DEFAULT '[]',
+    deals JSONB DEFAULT '[]',
+    UNIQUE(source, source_vendor_id)
+);
+
+-- vendor_reviews: 32,613 rows
+CREATE TABLE vendor_reviews (
+    id SERIAL PRIMARY KEY,
+    vendor_id INT REFERENCES vendors(id),
+    source TEXT NOT NULL,
+    review_text TEXT NOT NULL,
+    rating NUMERIC(3,1),
+    review_date DATE,
+    reviewer_name TEXT,
+    sentiment TEXT DEFAULT '',       -- 'positive', 'neutral', 'negative'
+    sentiment_confidence NUMERIC(5,4),
+    complaint_categories JSONB,      -- ["communication", "billing", ...]
+    praise_categories JSONB,         -- ["quality", "professionalism", ...]
+    analyzed_at TIMESTAMP,
+    UNIQUE(source, source_review_id)
+);
+
+-- scrape_runs: audit trail
+CREATE TABLE scrape_runs (
+    id SERIAL PRIMARY KEY,
+    source TEXT, category TEXT, city TEXT, state TEXT,
+    started_at TIMESTAMP, completed_at TIMESTAMP,
+    vendors_found INT, vendors_successful INT,
+    status TEXT
+);
+```
+
+### TheKnot GraphQL API (Cracked)
+
+```
+Endpoint: https://svc.theknotww.com/reviews-api/graphql
+Method: POST
+Headers:
+  Content-Type: application/json
+  x-tenant-id: tk-us
+
+Query structure:
+  reviews(input: {
+    filters: { storefrontId: "<vendor-uuid>" },
+    orderBy: { type: date, sort: desc },
+    pagination: { page: N, size: 50 }
+  }) {
+    totalCount
+    pageInfo { hasNextPage }
+    nodes {
+      id createdAt title
+      comment { content }          -- review text
+      ratings { value name }       -- Quality/Value/Response Time/Flexibility/Professionalism
+      reviewer { firstName lastName email }
+    }
+  }
+
+Storefront UUID found in: window.__INITIAL_STATE__.vendor.vendorRaw.id
+```
+
+### Zola Review Extraction
+
+Zola embeds reviews in the DOM after scroll. Navigate to `/wedding-vendors/{category}/{slug}`, scroll through page, extract from `[class*="reviews-section"]` elements.
+
+Fields available: reviewer name, rating (1-5), date, full review text.
+
+### Anti-Detection Requirements
+
+| Site | Protection | Solution |
+|------|-----------|----------|
+| TheKnot | DataDome | Visible browser (Xvfb), residential IP, session cookies |
+| Zola | Cloudflare (moderate) | Playwright stealth args, random delays |
+| WeddingWire | Cloudflare (moderate) | Standard Playwright setup |
+
+**Setup:**
+```bash
+apt install xvfb
+pip install playwright && playwright install chromium
+Xvfb :99 -screen 0 1920x1080x24 &
+export DISPLAY=:99 PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright
+```
+
+## Running the Pipeline
 
 ```bash
-# Clone repository
-git clone <repo-url>
-cd theknot-scraper
+# 1. Set up database
+python setup_db.py && python setup_review_db.py
 
-# Install package
-make install
+# 2. Discover vendors across metros
+python nationwide_build.py          # 28 metros × 3 categories
 
-# Or manually:
-pip install -e .
+# 3. Pull reviews
+python nationwide_tk_v3.py         # TheKnot reviews via GraphQL
+python scale_zola_reviews.py       # Zola reviews via DOM
 
-# Validate setup
-make validate
+# 4. Tag sentiment
+python sentiment_tagger_bulk.py    # ~4,000 reviews/sec
 
-# Run integration test
-cd theknot_scraper && python test_fetch_html.py
+# 5. Export dashboard data + build dashboard
+python export_dashboard.py
+python embed_data.py               # Creates index.html (standalone)
 ```
 
-### Option 2: Docker (Recommended for Production)
-
-```bash
-# Build Docker image
-make docker-build
-
-# Or manually:
-docker build -t theknot-scraper .
-
-# Run with docker-compose
-make docker-run
-
-# Or manually:
-docker-compose up
-
-# View logs
-make docker-logs
-```
-
-### Option 3: Development Setup
-
-```bash
-# Install with dev dependencies
-make install-dev
-
-# This installs:
-# - pytest, pytest-cov (testing)
-# - mypy (type checking)
-# - black, ruff (formatting/linting)
-# - pre-commit (git hooks)
-
-# Run tests
-make test
-
-# Run with coverage
-make test-cov
-
-# Format code
-make format
-
-# Lint code
-make lint
-```
-
-## 📖 Usage
-
-### Basic Scraping
-
-```python
-from theknot_scraper import TheKnotScraper, ScraperConfig
-
-# Configure
-config = ScraperConfig(
-    headless=False,  # Visible browser (recommended)
-    min_delay=5.0,
-    max_delay=10.0
-)
-
-# Scrape single vendor
-with TheKnotScraper(config) as scraper:
-    data = scraper.scrape_vendor_page(vendor_url)
-
-    print(f"Business: {data.business_name}")
-    print(f"Price: {data.starting_price}")
-    print(f"Packages: {len(data.packages)}")
-```
-
-### Using Docker
-
-```bash
-# Edit environment variables
-cp theknot_scraper/.env.example theknot_scraper/.env
-nano theknot_scraper/.env
-
-# Run with custom settings
-HEADLESS=false MIN_DELAY=5.0 docker-compose up
-
-# Run multiple workers
-docker-compose up --scale scraper=3
-```
-
-## 🧪 Testing
-
-### Run All Tests
-
-```bash
-make test
-```
-
-### Run with Coverage
-
-```bash
-make test-cov
-# Opens htmlcov/index.html
-```
-
-### Run Integration Test
-
-```bash
-make test-integration
-# Or:
-cd theknot_scraper && python test_fetch_html.py
-```
-
-### Validate Setup
-
-```bash
-make validate
-# Or:
-cd theknot_scraper && python validate_setup.py
-```
-
-## 🛠️ Development
-
-### Setup Development Environment
-
-```bash
-make dev-setup
-```
-
-This will:
-- Install package in editable mode
-- Install dev dependencies
-- Set up pre-commit hooks
-- Create necessary directories
-- Copy .env.example to .env
-
-### Code Quality
-
-```bash
-# Format code
-make format
-
-# Run linters
-make lint
-
-# Run pre-commit hooks manually
-pre-commit run --all-files
-```
-
-### Available Make Commands
-
-```bash
-make help  # Show all available commands
-```
-
-Commands include:
-- `install` - Install package
-- `install-dev` - Install with dev dependencies
-- `test` - Run unit tests
-- `test-cov` - Run tests with coverage
-- `lint` - Run linters
-- `format` - Format code
-- `clean` - Remove build artifacts
-- `docker-build` - Build Docker image
-- `docker-run` - Run in Docker
-- `validate` - Validate setup
-
-## 📊 Key Features
-
-### Anti-Detection Measures
-
-✅ **TLS Fingerprinting Bypass** - Real Chrome browser
-✅ **JavaScript Patches** - 8+ stealth patches
-✅ **Human Behavior Simulation** - Mouse, scrolling, timing
-✅ **Session Management** - Cookie persistence
-✅ **Retry Logic** - Automatic retry with backoff
-✅ **Proxy Support** - HTTP/SOCKS proxies
-
-### Testing & Quality
-
-✅ **Unit Tests** - Fast, isolated tests
-✅ **Integration Tests** - Live website testing
-✅ **Type Checking** - MyPy type hints
-✅ **Code Formatting** - Black + Ruff
-✅ **Pre-commit Hooks** - Automated quality checks
-✅ **Coverage Reports** - Track test coverage
-
-### Deployment & Operations
-
-✅ **Docker Support** - Containerized deployment
-✅ **Docker Compose** - Multi-container orchestration
-✅ **Health Checks** - Container health monitoring
-✅ **Resource Limits** - CPU/memory constraints
-✅ **Volume Mounts** - Persistent data storage
-
-## 🔧 Configuration
-
-### Environment Variables
-
-All settings can be configured via environment variables:
-
-```bash
-# Browser settings
-THEKNOT_HEADLESS=false
-THEKNOT_WINDOW_SIZE=1920,1080
-
-# Timing
-THEKNOT_MIN_DELAY=5.0
-THEKNOT_MAX_DELAY=10.0
-
-# Behavior
-THEKNOT_ENABLE_MOUSE_MOVEMENT=true
-THEKNOT_ENABLE_RANDOM_SCROLLING=true
-
-# Proxy
-THEKNOT_PROXY=http://user:pass@proxy.com:8080
-
-# Output
-THEKNOT_OUTPUT_DIR=./output
-THEKNOT_LOG_LEVEL=INFO
-```
-
-See `theknot_scraper/.env.example` for all options.
-
-## 📈 Success Metrics
-
-### Expected Success Rates
-
-| Configuration | Success Rate | Notes |
-|---------------|--------------|-------|
-| Visible + Residential IP + Delays | 90-95% | Best setup |
-| Visible + Home IP + Delays | 80-90% | Good |
-| Visible + Datacenter IP | 40-60% | May fail |
-| Headless + Any IP | 10-30% | Not recommended |
-
-## 📚 Documentation
-
-### Quick References
-
-- **QUICKSTART.md** - 5-minute quick start
-- **QUICK_TEST.md** - Quick test reference card
-- **TESTING.md** - Complete testing guide
-
-### Technical Documentation
-
-- **theknot-bot-detection-report.md** - Security analysis (9/10 difficulty)
-- **SCRAPER_DESIGN.md** - Architecture and design decisions
-- **IMPLEMENTATION_NOTES.md** - Implementation guide for architects
-- **SYSTEMATIC_IMPROVEMENTS.md** - Analysis of potential improvements
-
-### Package Documentation
-
-- **theknot_scraper/README.md** - Main package documentation
-- Full troubleshooting guide
-- Configuration options
-- Example usage
-
-## ⚖️ Legal & Ethical Considerations
-
-**IMPORTANT:** This tool is for **educational and research purposes only**.
-
-Before using:
-1. ✅ Review TheKnot's Terms of Service
-2. ✅ Respect robots.txt
-3. ✅ Implement rate limiting (5-10s delays)
-4. ✅ Consider official API for commercial use
-5. ✅ Use responsibly and ethically
-
-**We are not responsible for misuse of this tool.**
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**403 Forbidden:**
-- Use residential proxy
-- Increase delays to 10-15s
-- Ensure `headless=False`
-
-**CAPTCHA Challenges:**
-- Solve manually (60s wait time)
-- Reduce request rate
-- Use different IP
-
-**Import Errors:**
-- Run scripts from `theknot_scraper/` directory
-- Ensure package is installed: `pip install -e .`
-
-**Docker Issues:**
-- Check Chrome installation: `docker run theknot-scraper google-chrome --version`
-- Verify volumes are mounted correctly
-- Check logs: `docker-compose logs`
-
-See `TESTING.md` for complete troubleshooting guide.
-
-## 🤝 Contributing
-
-### Development Workflow
-
-1. Create feature branch
-2. Make changes
-3. Run tests: `make test`
-4. Format code: `make format`
-5. Run linters: `make lint`
-6. Commit (pre-commit hooks run automatically)
-7. Submit PR
-
-### Testing Requirements
-
-- Unit test coverage >85%
-- All linters pass
-- Type checking passes
-- Integration test succeeds
-
-## 📦 Dependencies
-
-### Required
-
-- Python 3.8+
-- Chrome/Chromium browser
-- undetected-chromedriver
-- selenium
-- pydantic
-- loguru
-
-### Optional (Development)
-
-- pytest (testing)
-- mypy (type checking)
-- black (formatting)
-- ruff (linting)
-- pre-commit (git hooks)
-
-See `pyproject.toml` for complete list.
-
-## 🔐 Security
-
-### Best Practices
-
-- Never commit `.env` files
-- Use environment variables for sensitive data
-- Rotate proxies regularly
-- Monitor for IP bans
-- Respect rate limits
-
-### Proxy Recommendations
-
-✅ **Residential proxies** - Best success rate
-⚠️ **Datacenter proxies** - Often blocked
-❌ **Free proxies** - Very unreliable
-
-## 📞 Support
-
-### Getting Help
-
-1. Check documentation in `theknot_scraper/README.md`
-2. Review `TESTING.md` for troubleshooting
-3. Check `IMPLEMENTATION_NOTES.md` for technical details
-4. Review test examples in `tests/`
-
-### Reporting Issues
-
-Include:
-- Python version
-- Chrome version
-- Configuration used
-- Error messages
-- Log output
-- Screenshots if applicable
-
-## 📝 License
-
-MIT License - See LICENSE file for details
-
-## 🎉 Acknowledgments
-
-Built with:
-- [undetected-chromedriver](https://github.com/ultrafunkamsterdam/undetected-chromedriver)
-- [Selenium](https://www.selenium.dev/)
-- [Pydantic](https://pydantic-docs.helpmanual.io/)
-- [Loguru](https://github.com/Delgan/loguru)
-
----
-
-**Version:** 1.0.0
-**Status:** Production Ready
-**Last Updated:** 2025-11-20
-
-**Remember:** Use responsibly. Respect website policies and rate limits. Always implement appropriate delays.
+## Dashboard
+
+Open `index.html` in any browser — fully standalone with embedded data and Chart.js visualizations.
+
+Features:
+- Sentiment overview (doughnut chart)
+- Rating distribution
+- Category breakdown table
+- Geographic analysis (top states)
+- Complaint/praise analysis
+- Top performers
+- Auto-generated insights
+
+## Known Limitations
+
+- **Review coverage**: 121/1,734 vendors have reviews stored. Many newly discovered vendors haven't been processed yet.
+- **Sentiment model**: Rule-based keyword matching (v1). Misses nuanced mixed-sentiment reviews ("great but pricey"). LLM-based tagging would improve accuracy.
+- **WeddingWire reviews**: Found 92 DOM elements but requires complex JS interaction; not yet implemented.
+- **Google Maps/Yelp**: Require paid APIs ($0.75-14.99/1K calls) due to aggressive anti-bot protection.
+- **TheKnot pagination**: Capped at 20 pages (1,000 reviews) per vendor per run to avoid rate limiting.
+- **DataDome**: Adapts over time. A single IP doing sustained scraping will eventually get flagged.
+
+## License
+
+MIT — educational/research purposes only. Respect TheKnot/Zola/WeddingWire Terms of Service.
