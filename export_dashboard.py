@@ -108,7 +108,7 @@ cur.execute("""
     SELECT cat, COUNT(*) FROM (
         SELECT jsonb_array_elements_text(complaint_categories) as cat
         FROM vendor_reviews 
-        WHERE sentiment = 'negative' AND jsonb_array_length(complaint_categories) > 0
+        WHERE sentiment = 'negative' AND COALESCE(is_vendor_reply, FALSE) = FALSE AND jsonb_array_length(complaint_categories) > 0
     ) sub GROUP BY cat ORDER BY count DESC LIMIT 15
 """)
 data['complaints'] = [{'category': r[0], 'count': r[1]} for r in cur.fetchall()]
@@ -118,7 +118,7 @@ cur.execute("""
     SELECT v.category, COUNT(DISTINCT vr.vendor_id), COUNT(vr.id)
     FROM vendor_reviews vr 
     JOIN vendors v ON v.id = vr.vendor_id
-    WHERE vr.sentiment = 'negative' AND v.category != ''
+    WHERE vr.sentiment = 'negative' AND COALESCE(vr.is_vendor_reply, FALSE) = FALSE AND v.category != ''
     GROUP BY v.category ORDER BY COUNT(vr.id) DESC
 """)
 data['negative_by_category'] = [{'category': r[0], 'vendor_count': r[1], 'negative_count': r[2]} for r in cur.fetchall()]
