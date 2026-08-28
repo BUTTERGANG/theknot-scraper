@@ -1,0 +1,605 @@
+{
+  "total_vendors": 1734,
+  "total_reviews": 32755,
+  "with_text": 26308,
+  "avg_rating": 4.84,
+  "states_covered": 22,
+  "sentiment": {
+    "positive": 31408,
+    "neutral": 304,
+    "negative": 912,
+    "total": 32624,
+    "positive_pct": 96.27268268759195,
+    "neutral_pct": 0.9318293281020108,
+    "negative_pct": 2.7954879843060323
+  },
+  "rating_dist": [
+    {
+      "label": "1\u2605",
+      "count": 643,
+      "color": "#f85149"
+    },
+    {
+      "label": "2\u2605",
+      "count": 268,
+      "color": "#f0883e"
+    },
+    {
+      "label": "3\u2605",
+      "count": 378,
+      "color": "#d29922"
+    },
+    {
+      "label": "4\u2605",
+      "count": 1052,
+      "color": "#58a6ff"
+    },
+    {
+      "label": "5\u2605",
+      "count": 29412,
+      "color": "#3fb950"
+    }
+  ],
+  "categories": [
+    {
+      "category": "wedding-djs",
+      "vendors": 787,
+      "reviews": 15572,
+      "avg_rating": 4.88,
+      "coverage_pct": 59
+    },
+    {
+      "category": "wedding-planners",
+      "vendors": 836,
+      "reviews": 9915,
+      "avg_rating": 4.86,
+      "coverage_pct": 52
+    },
+    {
+      "category": "wedding-photographers",
+      "vendors": 40,
+      "reviews": 1002,
+      "avg_rating": 4.7,
+      "coverage_pct": 73
+    },
+    {
+      "category": "wedding-florists",
+      "vendors": 29,
+      "reviews": 284,
+      "avg_rating": 4.91,
+      "coverage_pct": 66
+    },
+    {
+      "category": "wedding-venues",
+      "vendors": 20,
+      "reviews": 217,
+      "avg_rating": 4.93,
+      "coverage_pct": 100
+    },
+    {
+      "category": "wedding-caterers",
+      "vendors": 22,
+      "reviews": 191,
+      "avg_rating": 4.93,
+      "coverage_pct": 55
+    }
+  ],
+  "top_states": [
+    {
+      "state": "TX",
+      "vendors": 228,
+      "reviews": 4590,
+      "avg_rating": 4.9
+    },
+    {
+      "state": "NY",
+      "vendors": 102,
+      "reviews": 3153,
+      "avg_rating": 4.77
+    },
+    {
+      "state": "CA",
+      "vendors": 227,
+      "reviews": 2558,
+      "avg_rating": 4.92
+    },
+    {
+      "state": "FL",
+      "vendors": 174,
+      "reviews": 2284,
+      "avg_rating": 4.9
+    },
+    {
+      "state": "IL",
+      "vendors": 101,
+      "reviews": 2124,
+      "avg_rating": 4.88
+    },
+    {
+      "state": "CO",
+      "vendors": 60,
+      "reviews": 1356,
+      "avg_rating": 4.76
+    },
+    {
+      "state": "NC",
+      "vendors": 60,
+      "reviews": 1238,
+      "avg_rating": 4.97
+    },
+    {
+      "state": "PA",
+      "vendors": 59,
+      "reviews": 1165,
+      "avg_rating": 4.9
+    },
+    {
+      "state": "GA",
+      "vendors": 111,
+      "reviews": 1087,
+      "avg_rating": 4.86
+    },
+    {
+      "state": "LA",
+      "vendors": 61,
+      "reviews": 1050,
+      "avg_rating": 4.86
+    },
+    {
+      "state": "AZ",
+      "vendors": 59,
+      "reviews": 954,
+      "avg_rating": 4.94
+    },
+    {
+      "state": "OH",
+      "vendors": 60,
+      "reviews": 877,
+      "avg_rating": 4.84
+    },
+    {
+      "state": "WA",
+      "vendors": 57,
+      "reviews": 776,
+      "avg_rating": 4.91
+    },
+    {
+      "state": "IN",
+      "vendors": 59,
+      "reviews": 728,
+      "avg_rating": 4.88
+    },
+    {
+      "state": "MA",
+      "vendors": 59,
+      "reviews": 662,
+      "avg_rating": 4.95
+    }
+  ],
+  "all_states": [
+    {
+      "state": "TX",
+      "vendors": 228,
+      "reviews": 4590,
+      "avg_rating": 4.9
+    },
+    {
+      "state": "NY",
+      "vendors": 102,
+      "reviews": 3153,
+      "avg_rating": 4.77
+    },
+    {
+      "state": "CA",
+      "vendors": 227,
+      "reviews": 2558,
+      "avg_rating": 4.92
+    },
+    {
+      "state": "FL",
+      "vendors": 174,
+      "reviews": 2284,
+      "avg_rating": 4.9
+    },
+    {
+      "state": "IL",
+      "vendors": 101,
+      "reviews": 2124,
+      "avg_rating": 4.88
+    },
+    {
+      "state": "CO",
+      "vendors": 60,
+      "reviews": 1356,
+      "avg_rating": 4.76
+    },
+    {
+      "state": "NC",
+      "vendors": 60,
+      "reviews": 1238,
+      "avg_rating": 4.97
+    },
+    {
+      "state": "PA",
+      "vendors": 59,
+      "reviews": 1165,
+      "avg_rating": 4.9
+    },
+    {
+      "state": "GA",
+      "vendors": 111,
+      "reviews": 1087,
+      "avg_rating": 4.86
+    },
+    {
+      "state": "LA",
+      "vendors": 61,
+      "reviews": 1050,
+      "avg_rating": 4.86
+    },
+    {
+      "state": "AZ",
+      "vendors": 59,
+      "reviews": 954,
+      "avg_rating": 4.94
+    },
+    {
+      "state": "OH",
+      "vendors": 60,
+      "reviews": 877,
+      "avg_rating": 4.84
+    },
+    {
+      "state": "WA",
+      "vendors": 57,
+      "reviews": 776,
+      "avg_rating": 4.91
+    },
+    {
+      "state": "IN",
+      "vendors": 59,
+      "reviews": 728,
+      "avg_rating": 4.88
+    },
+    {
+      "state": "MA",
+      "vendors": 59,
+      "reviews": 662,
+      "avg_rating": 4.95
+    },
+    {
+      "state": "OR",
+      "vendors": 54,
+      "reviews": 336,
+      "avg_rating": 4.91
+    },
+    {
+      "state": "TN",
+      "vendors": 59,
+      "reviews": 319,
+      "avg_rating": 4.77
+    },
+    {
+      "state": "NV",
+      "vendors": 57,
+      "reviews": 311,
+      "avg_rating": 4.85
+    },
+    {
+      "state": "NJ",
+      "vendors": 4,
+      "reviews": 70,
+      "avg_rating": 4.88
+    },
+    {
+      "state": "MO",
+      "vendors": 1,
+      "reviews": 31,
+      "avg_rating": 4.82
+    },
+    {
+      "state": "VA",
+      "vendors": 1,
+      "reviews": 17,
+      "avg_rating": 5.0
+    },
+    {
+      "state": "MI",
+      "vendors": 1,
+      "reviews": 15,
+      "avg_rating": 5.0
+    }
+  ],
+  "complaints": [
+    {
+      "category": "communication",
+      "count": 159
+    },
+    {
+      "category": "transparency",
+      "count": 141
+    },
+    {
+      "category": "planning",
+      "count": 116
+    },
+    {
+      "category": "punctuality",
+      "count": 78
+    },
+    {
+      "category": "contract",
+      "count": 78
+    },
+    {
+      "category": "billing",
+      "count": 70
+    },
+    {
+      "category": "professionalism",
+      "count": 68
+    },
+    {
+      "category": "timeline",
+      "count": 53
+    },
+    {
+      "category": "quality",
+      "count": 44
+    },
+    {
+      "category": "price",
+      "count": 43
+    },
+    {
+      "category": "equipment",
+      "count": 36
+    },
+    {
+      "category": "setup",
+      "count": 27
+    },
+    {
+      "category": "responsiveness",
+      "count": 23
+    },
+    {
+      "category": "cancellation",
+      "count": 23
+    },
+    {
+      "category": "logistics",
+      "count": 18
+    }
+  ],
+  "negative_by_category": [
+    {
+      "category": "wedding-djs",
+      "vendor_count": 112,
+      "negative_count": 250
+    },
+    {
+      "category": "wedding-photographers",
+      "vendor_count": 6,
+      "negative_count": 249
+    },
+    {
+      "category": "wedding-planners",
+      "vendor_count": 55,
+      "negative_count": 125
+    },
+    {
+      "category": "wedding-florists",
+      "vendor_count": 2,
+      "negative_count": 5
+    },
+    {
+      "category": "wedding-caterers",
+      "vendor_count": 1,
+      "negative_count": 1
+    },
+    {
+      "category": "wedding-venues",
+      "vendor_count": 1,
+      "negative_count": 1
+    }
+  ],
+  "praise": [
+    {
+      "category": "professionalism",
+      "count": 7301
+    },
+    {
+      "category": "experience",
+      "count": 4427
+    },
+    {
+      "category": "planning",
+      "count": 4320
+    },
+    {
+      "category": "transparency",
+      "count": 2698
+    },
+    {
+      "category": "communication",
+      "count": 1343
+    },
+    {
+      "category": "logistics",
+      "count": 1196
+    },
+    {
+      "category": "equipment",
+      "count": 793
+    },
+    {
+      "category": "guest_interaction",
+      "count": 615
+    },
+    {
+      "category": "quality",
+      "count": 611
+    },
+    {
+      "category": "recommendation",
+      "count": 585
+    },
+    {
+      "category": "punctuality",
+      "count": 566
+    },
+    {
+      "category": "timeline",
+      "count": 390
+    },
+    {
+      "category": "responsiveness",
+      "count": 371
+    },
+    {
+      "category": "price",
+      "count": 332
+    },
+    {
+      "category": "extras",
+      "count": 303
+    }
+  ],
+  "top_vendors": [
+    {
+      "name": "George Street Photo & Video",
+      "city": "",
+      "state": "",
+      "category": "photographers",
+      "review_count": 2699,
+      "star_rating": 4.3
+    },
+    {
+      "name": "SCE Event Group",
+      "city": "Philadelphia",
+      "state": "PA",
+      "category": "djs",
+      "review_count": 2030,
+      "star_rating": "-"
+    },
+    {
+      "name": "LeForce Entertainment",
+      "city": "Dallas",
+      "state": "TX",
+      "category": "djs",
+      "review_count": 1322,
+      "star_rating": "-"
+    },
+    {
+      "name": "Dancing DJ Productions",
+      "city": "San Diego",
+      "state": "CA",
+      "category": "djs",
+      "review_count": 1245,
+      "star_rating": "-"
+    },
+    {
+      "name": "DJ Connection",
+      "city": "Dallas",
+      "state": "TX",
+      "category": "djs",
+      "review_count": 1241,
+      "star_rating": "-"
+    },
+    {
+      "name": "Bunn DJ Company",
+      "city": "San Diego",
+      "state": "CA",
+      "category": "djs",
+      "review_count": 1222,
+      "star_rating": "-"
+    },
+    {
+      "name": "CoHost Entertainment",
+      "city": "Dallas",
+      "state": "TX",
+      "category": "djs",
+      "review_count": 1218,
+      "star_rating": "-"
+    },
+    {
+      "name": "Carolina DJ Professionals",
+      "city": "Charlotte",
+      "state": "NC",
+      "category": "djs",
+      "review_count": 1215,
+      "star_rating": "-"
+    },
+    {
+      "name": "Toast Entertainment",
+      "city": "Houston",
+      "state": "TX",
+      "category": "djs",
+      "review_count": 1203,
+      "star_rating": "-"
+    },
+    {
+      "name": "Destify | destination wedding specialist",
+      "city": "Chicago",
+      "state": "IL",
+      "category": "planners",
+      "review_count": 1168,
+      "star_rating": "-"
+    }
+  ],
+  "best_vendors": [
+    {
+      "name": "Diamond Productions DJ Entertainment",
+      "city": "",
+      "star_rating": 5.0,
+      "stored_reviews": 195
+    },
+    {
+      "name": "Green Line Talent",
+      "city": "",
+      "star_rating": 5.0,
+      "stored_reviews": 180
+    },
+    {
+      "name": "Emma Cleary Photo & Video",
+      "city": "",
+      "star_rating": 5.0,
+      "stored_reviews": 152
+    },
+    {
+      "name": "The Wedding Plan & Company",
+      "city": "",
+      "star_rating": 5.0,
+      "stored_reviews": 61
+    },
+    {
+      "name": "The Simply Elegant Group",
+      "city": "",
+      "star_rating": 4.9,
+      "stored_reviews": 281
+    }
+  ],
+  "insights": [
+    {
+      "type": "warning",
+      "text": "<b>communication</b> is the #1 complaint category \u2014 mentioned in <b>17%</b> of negative reviews. Addressing this single pain point could improve satisfaction across 912 dissatisfied couples."
+    },
+    {
+      "type": "info",
+      "text": "<b>Review bias:</b> 96% of reviews are positive. This is typical of self-selected marketplace reviews but means negative signals are high-value \u2014 each one represents genuine dissatisfaction worth analyzing individually."
+    },
+    {
+      "type": "success",
+      "text": "<b>Pricing transparency wins business:</b> Transparency is the #4 most-praised quality (2698 mentions). Vendors who list starting prices publicly get measurably more positive mentions than those requiring inquiry."
+    },
+    {
+      "type": "success",
+      "text": "<b>DJ market:</b> 787 DJs tracked with 15572 reviews across all metros. Average rating: 4.88\u2605. This is our deepest dataset for competitive analysis."
+    },
+    {
+      "type": "success",
+      "text": "<b>Planner market:</b> 836 planners tracked with 9915 reviews. Coverage: 52%. Planners are the highest-value service category for WeddingOS integration."
+    }
+  ]
+}
