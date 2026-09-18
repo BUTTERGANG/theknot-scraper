@@ -1,9 +1,16 @@
 """
 Final DB stats after full scrape
 """
+import os
 import psycopg2
 
-conn = psycopg2.connect(host='localhost', port=54329, user='postgres', password='devpass', dbname='wedding_vendors')
+conn = psycopg2.connect(
+    host=os.environ.get('DB_HOST', 'localhost'),
+    port=int(os.environ.get('DB_PORT', 54329)),
+    user=os.environ.get('DB_USER', 'postgres'),
+    password=os.environ.get('DB_PASSWORD', 'devpass'),
+    dbname=os.environ.get('DB_NAME', 'wedding_vendors'),
+)
 cur = conn.cursor()
 
 cur.execute('SELECT source, COUNT(*) FROM vendor_reviews GROUP BY source ORDER BY COUNT(*) DESC')
